@@ -19,7 +19,7 @@ exports.auth = (req, res, next) => {
     try{
         let payload = jwt.decode(token, secret);
 
-        console.log(payload);
+        //console.log(payload);
 
         if(payload.exp <= moment().unix()){
             return res.status(404).json({
@@ -28,6 +28,7 @@ exports.auth = (req, res, next) => {
             });
         }
         req.user = payload;
+        next();
 
     } catch ( error ){
         return res.status(404).json({
@@ -37,5 +38,4 @@ exports.auth = (req, res, next) => {
         });
     }
 
-    next();
 }
