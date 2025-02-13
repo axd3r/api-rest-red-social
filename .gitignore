@@ -4,3 +4,8 @@ node_modules/
 *.log
 dist/
 /node_modules
+*.jpg
+*.png
+*.jpeg
+*.gif
+test/

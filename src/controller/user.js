@@ -2,8 +2,10 @@ const validatorUser = require("../helper/validator");
 const bcrypt = require("bcrypt");
 const mongoosePaginate = require("mongoose-paginate-v2");
 const User = require("../models/user");
-const { error, log } = require("console");
+const followService = require("../services/followService");
 const jwt = require("../services/jwt");
+const path = require("path");
+const fs = require("fs")
 
 const pruebaUser = (req, res) => {
     return res.status(200).json({
@@ -162,9 +164,12 @@ const profile = async (req, res) => {
         user.password = undefined;
         user.role = undefined
 
+        const followInfo = await followService.FollowThisUser(req.user.id, user.id);
+
         return res.status(200).json({
             status: "success",
-            user
+            user,
+            followInfo
         })
     } catch( error ){
         return res.status(500).json({
@@ -196,13 +201,17 @@ const list = async (req, res) => {
             });
         }
 
+        let followUserIds = await followService.FollowUserIds(req.user.id);
+
         return res.status(200).json({
             status: "success",
             users: result.docs,
             page: result.page,
             itemsPerPage: result.limit,
             total: result.totalDocs,
-            totalPages: result.totalPages
+            totalPages: result.totalPages,
+            user_following: followUserIds.following,
+            user_follow_me: followUserIds.followers
         });
 
     } catch (error) {
@@ -269,11 +278,92 @@ const update = async (req, res) => {
     }
 };
 
+const upload = async (req, res) => {
+    if(!req.file && !req.files) {
+        return res.status(404).json({
+            status: "error",
+            message: "Peticion invalida:  no se pudo subir ninguna imagen"
+        });
+    }
+
+    let archivo = req.file.originalname;
+
+    let archivo_extension = path.extname(archivo).toLowerCase().substring(1);
+
+    if(!["png", "jpg", "jpeg", "gif"].includes(archivo_extension)) {
+        fs.unlink(req.file.path, (error) => {
+            if (error) {
+                console.error("Error al intentar borrar el archivo: ", error);
+            }
+            return res.status(400).json({
+                status: "error",
+                message: "Imagen invalida: formato no permitido",
+            });
+        });
+        return
+    }
+
+    try {
+
+        const userIdentity = req.user;
+
+        const userUpdated = await User.findOneAndUpdate(
+            {_id: userIdentity.id}, 
+            {image: req.file.filename}, 
+            {new: true}
+        );
+
+        if (!userUpdated) {
+            return res.status(500).json({
+                status: "error",
+                message: "Error al actualizar el usuario"
+            });
+        }
+
+        return res.status(200).json({
+            status: "success",
+            message: "Usuario actualizado correctamente",
+            user: userUpdated,
+            fichero: req.file
+        })
+
+
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: "Error en la actualizacion",
+            error: error.message
+        });
+    }
+};
+
+const avatar = (req, res) => {
+
+    let file = req.params.file;
+    let ruta_fisica = path.join(__dirname, "../image/user/", file);
+
+    fs.stat(ruta_fisica, (error, stats) => {
+        if (error || !stats.isFile()) {
+            return res.status(404).json({
+                status: "error",
+                message: "No se pudo encontrar la imagen",
+                error,
+                fichero,
+                ruta_fisica
+            });
+        } else {
+            return res.sendFile(path.resolve(ruta_fisica));
+        }
+    });
+};
+
 module.exports = {
     pruebaUser,
     register,
     login,
     profile,
     list,
-    update
+    update,
+    upload,
+    avatar
 }
