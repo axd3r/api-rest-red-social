@@ -8,4 +8,5 @@ dist/
 *.png
 *.jpeg
 *.gif
+*.pdf
 test/
