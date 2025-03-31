@@ -4,6 +4,9 @@ const path = require("path");
 const Publication = require("../models/publication");
 const validatorPublication = require("../helper/validatorublication");
 
+const followService = require("../services/followService");
+const { response } = require("express");
+
 const pruebaPublication = (req, res) => {
     return res.status(200).send({
         "message": "Mensaje desde controlles/publication.js"
@@ -126,7 +129,6 @@ const remove = async(req, res) => {
 };
 
 const publicationUser = async (req, res) => {
-
     
     try {
         let userId = req.user.id;
@@ -232,6 +234,51 @@ const media = (req, res) => {
     });
 };
 
+const feed = async (req, res) => {
+
+    let page = 1;
+
+    if( req.params.page){
+        page = req.params.page;
+    }
+
+    let itemsPerPage = 5;
+
+    const options = {
+        page,
+        limit: itemsPerPage,
+    }
+
+    try {
+        const myFollows = await followService.FollowUserIds(req.user.id);
+
+        const publicacions = await Publication.paginate(
+            {user: myFollows.following}, // Manera implicita
+            //user: {"$in": myFollows.following} Manera explicita
+            {...options, populate: {path: "user", select: "-password -role -__v"}});
+
+        if(!publicacions){
+            return res.status(500).json({
+                status: "error",
+                message: "No hay publicaciones que mostrar"
+            });
+        }
+
+        return res.status(200).json({
+            status: "success",
+            message: "Feed de publicacion correctamente",
+            myFollows: myFollows.following,
+            publicacions
+        });
+    }catch(error){
+        return res.status(500).json({
+            status: "error",
+            message: "No se han listado las publicaciones del feed"
+
+        });
+    }
+} 
+
 module.exports = {
     pruebaPublication,
     save,
@@ -239,5 +286,6 @@ module.exports = {
     remove,
     publicationUser,
     uploadFile,
-    media
+    media,
+    feed
 }

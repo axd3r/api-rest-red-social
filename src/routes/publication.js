@@ -37,5 +37,6 @@ router.delete("/remove/:id", auth, PublicController.remove);
 router.get("/detailUser/:user?/:page?", auth, PublicController.publicationUser);
 router.post("/uploadFile/:id", [auth, upload.single("file0")], PublicController.uploadFile);
 router.get("/media/:file", auth, PublicController.media);
+router.get("/feed/:page", auth, PublicController.feed);
 
 module.exports = router

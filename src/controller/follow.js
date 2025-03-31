@@ -90,7 +90,7 @@ const following = async (req, res) => {
 
         const follows = await Follow.paginate(
             { user: userId },
-            { ...options, populate: { path: "user followed", select: "-password -role -__v" } }
+            { ...options, populate: { path: "user followed", select: "-password -role -__v -email" } }
         );
 
         let followUserIds = await followService.FollowUserIds(req.user.id);
@@ -135,7 +135,7 @@ const followers = async (req, res) => {
 
         const follows = await Follow.paginate(
             { followed: userId },
-            { ...options, populate: { path: "user followed", select: "-password -role -__v" } }
+            { ...options, populate: { path: "user followed", select: "-password -role -__v -email" } }
         );
 
         let followUserIds = await followService.FollowUserIds(req.user.id);

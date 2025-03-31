@@ -26,5 +26,6 @@ router.get("/list/:page", auth, UserController.list);
 router.put("/update", auth, UserController.update);
 router.post("/subir-imagen", [auth, subidas.single("file0")], UserController.upload);
 router.get("/avatar/:file", auth, UserController.avatar);
+router.get("/counter/:id", auth, UserController.counters);
 
 module.exports = router

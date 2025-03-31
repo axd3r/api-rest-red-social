@@ -38,7 +38,6 @@ app.get("/ruta-prueba", (req,res) => {
 
 });
 
-
 app.listen(port, () => {
     console.log("Servidor de node corriendo en el puerto " + port);
 });

@@ -44,7 +44,6 @@ const FollowThisUser = async (identityUserId, profileUserId) => {
     }
 };
 
-
 module.exports = {
     FollowUserIds,
     FollowThisUser

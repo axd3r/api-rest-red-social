@@ -5,7 +5,9 @@ const User = require("../models/user");
 const followService = require("../services/followService");
 const jwt = require("../services/jwt");
 const path = require("path");
-const fs = require("fs")
+const fs = require("fs");
+const Follow = require("../models/follow");
+const Publication = require("../models/publication");
 
 const pruebaUser = (req, res) => {
     return res.status(200).json({
@@ -189,7 +191,7 @@ const list = async (req, res) => {
             page,
             limit: itemsPerPage,
             sort: { _id: 1 }, // Ordenar por ID ascendente
-            select: "-password" // Excluir el campo de contraseña
+            select: "-password -email -role -__v" // Excluir el campo de contraseña
         };
 
         const result = await User.paginate({}, options);
@@ -253,7 +255,6 @@ const update = async (req, res) => {
             });
         }
 
-    
     if(userToUpdate.password){
         userToUpdate.password = await bcrypt.hash(userToUpdate.password, 10);
     }
@@ -326,8 +327,6 @@ const upload = async (req, res) => {
             user: userUpdated,
             fichero: req.file
         })
-
-
     } catch (error) {
         return res.status(500).json({
             status: "error",
@@ -357,6 +356,33 @@ const avatar = (req, res) => {
     });
 };
 
+const counters = async (req, res) => {
+    let userId = req.user.id;
+
+    if(req.params.id){
+        userId = req.params.id;
+    }
+
+    try{
+        const following = await Follow.countDocuments({ user: userId });
+        const followed = await Follow.countDocuments({ followed: userId });
+        const publications = await Publication.countDocuments({ user: userId });
+
+        return res.status(200).json({
+            userId,
+            following: following,
+            followed: followed,
+            publications: publications
+        })
+    }catch(error){
+        return res.status(500).json({
+            status: "error",
+            message: "Error en los contadores",
+            error: error
+        });
+    }
+}
+
 module.exports = {
     pruebaUser,
     register,
@@ -365,5 +391,6 @@ module.exports = {
     list,
     update,
     upload,
-    avatar
+    avatar,
+    counters
 }
