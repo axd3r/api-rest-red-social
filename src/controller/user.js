@@ -144,6 +144,7 @@ const profile = async (req, res) => {
 
     const user = await User.findOne({
         $or:[
+            { _id: query.toLowerCase() },
             { email: query.toLowerCase() },
             { name: regexQuery },
             { surname: regexQuery },
